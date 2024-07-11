@@ -1,0 +1,14 @@
+.server-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .server-button:hover {
+    background-color: #0056b3;
+  }
+  
