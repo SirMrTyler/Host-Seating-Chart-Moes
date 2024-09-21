@@ -1,10 +1,25 @@
 import React from "react";
 import "../css/ServerButton.css";
 
-const ServerButton = ({ count }) => {
+const ServerButton = ({ 
+        onClick,
+        isSelected,
+        backgroundColor, 
+        textColor, 
+        name 
+    }) => {
     return (
-        <button className="server-button">
-            {count} Server{count > 1 ? "s" : ""}
+        <button 
+            className={`
+                server-button ${isSelected ? "selected" : ""}`
+            }
+            style={{ 
+                backgroundColor: backgroundColor,
+                color: textColor
+            }}
+            onClick={onClick}
+        >
+            {name}
         </button>
     );
 };

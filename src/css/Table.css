@@ -2,21 +2,106 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 50px;
-    height: 50px;
-    border: 2px solid black;
     font-size: 1.2em;
-  }
+    border: 2px solid blue;
+    background-color: white;
+    z-index: 1;
+}
+.table:hover {
+    cursor: pointer;
+}
+.rectangle {
+  width: 20px;
+  height: 50px;
+  border: 2px solid blue;
+}
   
-  .rectangle {
-    width: 100px;
-  }
-  
-  .circle {
-    border-radius: 50%;
-  }
-  
-  .square {
-    /* Default square style */
-  }
-  
+.circle {
+  width: 40px;
+  height: 50px;
+  border: 2px solid blue;
+  border-radius: 50%;
+}
+.square {
+  width: 20px;
+  height: 35px;
+  border: 2px solid blue;
+}
+
+/* Row 1: Tables 1-17 */
+.table-1 { grid-row: 1 }
+.table-2 { grid-row: 1 }
+.table-3 { grid-row: 1 }
+.table-4 { grid-row: 1 }
+.table-5 { grid-row: 1 }
+.table-6 { grid-row: 1 }
+.table-7 { grid-row: 1 }
+.table-8 { grid-row: 1 }
+.table-9 { grid-row: 1 }
+.table-10 { grid-row: 1 }
+.table-11 { grid-row: 1 }
+.table-12 { grid-row: 1 }
+.table-13 { grid-row: 1 }
+.table-14 { grid-row: 1 }
+.table-15 { grid-row: 1 }
+.table-16 { grid-row: 1 }
+.table-17 { grid-row: 1 }
+
+/* Row 2: Tables 36-18 (reverse order) */
+.table-36 { grid-row: 2; margin-top: 25px; }
+.table-35 { grid-row: 2; margin-top: 25px; }
+.table-34 { grid-row: 2; margin-top: 25px; }
+.table-33 { grid-row: 2; margin-top: 25px;
+  width: 30px; height: 22px; margin-left: 10px;
+}
+.table-32 { grid-row: 2; margin-top: 25px; 
+  width: 30px; height: 22px;
+}
+.table-31 { grid-row: 2; margin-top: 25px; 
+  width: 30px; height: 22px;
+}
+.table-30 { grid-row: 2; margin-top: 25px; background-color: gray; }
+.table-29 { grid-row: 2; margin-top: 25px; margin-left: 20px;}
+.table-28 { grid-row: 2; margin-top: 25px; }
+.table-27 { grid-row: 2; margin-top: 15px; }
+.table-26 { grid-row: 2; margin-top: 25px;
+  width: 30px; height: 22px;
+}
+.table-25 { grid-row: 2; margin-top: 25px; width: 30px; height: 22px; }
+.table-24 { grid-row: 2; margin-top: 25px; width: 30px; height: 22px; }
+.table-18 { grid-column: 17 / 17; grid-row: 2; }
+
+/* Row 3: Table 19 */
+.table-19 { grid-column: 17 / 17; grid-row: 3; }
+
+/* Row 4: Tables 23-20 */
+.table-23 { grid-column: 13; grid-row: 3; }
+.table-22 { grid-column: 14 / 17; grid-row: 3; }
+.table-20 { grid-column: 17 / 17; grid-row: 4; }
+
+/* Row 5: Table 21 */
+.table-21 { grid-column: 15 / 16; grid-row:4; }
+
+.table-info {
+  margin-top: 20px;
+  border: 2px solid blue;
+  padding: 10px;
+  padding-right: 50px;
+  width: 100%;
+  max-width: 1000px;
+  background-color: white;
+}
+
+.table-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.table-info-row-1 {
+  border-top: none;
+}
+
+.table-info-row-2 {
+  border-top: 1px solid blue;
+}

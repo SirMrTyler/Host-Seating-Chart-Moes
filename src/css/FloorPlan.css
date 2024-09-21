@@ -1,6 +1,6 @@
 .card {
-  background-color: white;
-  border: 2px solid blue;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 1);
   padding: 20px;
   margin: 20px;
   border-radius: 10px;
@@ -13,43 +13,154 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    background-color: #f0f0f0;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    width: auto;
 }
 
 .server-buttons {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .tables-container {
-    display: flex;
+    content: center;
     justify-content: center;
-  }
-
-  .tables {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
     gap: 10px;
-    max-width: 1000px;
-  }
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    background-color: #ffffff;
+    border: 2px;
+    border-radius: 5px;
+    margin-bottom: 10px
+}
+@media (min-width: 800px) {
+    .server-buttons {
+      width: 713px;
+      padding-left: 10px;
+      padding-right: 10px;
+      margin-top: 5px;
+    }
+}
 
-  .table-info {
-    margin-top: 20px;
-    border: 2px solid blue;
-    padding: 10px;
-    width: 100%;
-    max-width: 1000px;
-    background-color: white;
-  }
-
-  .table-info-row {
+.floor-container {
     display: flex;
-    justify-content: space-between;
-    border-top: 1px solid blue;
-    padding: 10px 0;
-  }
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-  .table-info-row:first-child {
-    border-top: none;
-  }
+.sections-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1ft));
+    border: 2px solid blue;
+    background-color: #f0f0f0;
+    gap: 5px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* make the floor section divs have no impact on other divs */
+.floor-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid blue;
+  box-sizing: border-box;
+}
+
+.tables-container {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto;
+}
+.floor-section.section-1 {
+  background-color: gold;
+}
+.floor-section.section-2 {
+  background-color: rgb(40, 146, 181);
+}
+.floor-section.section-3 {
+  background-color: lightgreen;
+}
+.floor-section.section-4 {
+  background-color: lightcoral;
+} 
+.floor-section.section-5 {
+  background-color: lightpink;
+}
+.floor-section.section-6 {
+  background-color: rgb(246, 6, 242);
+} 
+.floor-section.section-7 {
+  background-color: rgb(13, 221, 239);
+}
+
+
+.blur-background {
+  filter: blur(5px);
+  pointer-events: none;
+  z-index: 999;
+}
+
+.party-size-input {
+  width: 200px;
+  height: 250px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  padding: 10px;
+  z-index: 1000;
+  font-size: 24px;
+  border-radius: 6px;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 10);
+}
+.clear-btn {
+  grid-column: 1 /2;
+  border-radius: 3px;
+  border-color: rgb(189, 189, 189);
+  font-weight: bold;
+}
+.confirm-btn {
+  grid-column: 2/4;
+  border-radius: 3px;
+  background-color: #0056b3;
+  font-weight: bold;
+  color: white;
+}
+
+.party-size-display {
+  font-size: 24px;
+  margin-bottom: 10px;
+  border: 3px solid #e1e0e0;
+  border-color: #e1e0e0;
+}
+
+.party-size-buttons {
+  display: grid;
+  width: 100%;
+  height: 80%;
+  justify-content: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 50px);
+  gap: 10px;
+}
+
+.grid-button {
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+}
+
+.confirm-button {
+  grid-column: span 3;
+  background-color: green;
+  color: white;
+  font-weight: bold;
+}
