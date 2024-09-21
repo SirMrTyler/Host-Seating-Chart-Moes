@@ -5,6 +5,7 @@ import "../css/FloorPlan.css";
 
 const FloorPlan = () => {
     const [servers, setSelectedSection] = useState(1);
+    const [sections, setSections] = useState([{section: 1, priority: 0}]);
     const [tables, setTables] = useState(Array.from({ length: 36 }, (_, i) => ({
         tableNumber: i + 1,
         section: 1,
@@ -21,6 +22,15 @@ const FloorPlan = () => {
     const [partySizeInput, setPartySizeInput] = useState("");
     const [showPartySizeInput, setShowPartySizeInput] = useState(false);
     const partySizeInputRef = useRef(null);
+// #region UseEffect's
+    // Update sections when the number of servers changes
+    useEffect(() => {
+        const newSections = Array.from({ length: servers }, (_, i) => ({
+            section: i + 1,
+            priority: servers-i,
+        }));
+        setSections(newSections);    
+    }, [servers]);
 
     // Update tables when the number of servers changes
     useEffect(() => {
@@ -47,14 +57,16 @@ const FloorPlan = () => {
             document.removeEventListener("touchstart", handleClickOutside);
         };
     }, [showPartySizeInput]);
+    
+    // Update the recommended table when the tables or last seated section change
     useEffect(() => {
         const nextTable = findNextTableToSeat();
         setRecommendedTable(nextTable);
     }, [tables, lastSeatedSection]);
+// #endregion
 
-    // Handle the click event for the ServerButton component
-    const handleServerButtonClick = (count) => {setSelectedSection(count);}
-
+// #region Render Functions
+    // Render the Servers on Buttons
     const serverButtons = Array.from({ length: 7 }, (_, i) => (
         <ServerButton 
             key={i} 
@@ -65,76 +77,7 @@ const FloorPlan = () => {
             name={`Server ${i + 1}`}
         />
     ));
-    
-    // Find the next table to seat based on the last seated table, 
-    // isWindow, and isSeated properties
-    const findNextTableToSeat = () => {
-        const allAvailableTables = tables.filter(table => !table.isSeated);
-
-        // Get unique sections from available tables
-        const availableSections = [...new Set(allAvailableTables.map(table => table.section))];
-
-        const prioritizedSections = [
-            ...skippedSections,
-            ...availableSections.filter(section => !skippedSections.includes(section))
-        ];
-
-        for (const section of prioritizedSections) {
-            // Find all available tables in the current section
-            const tablesInSection = allAvailableTables.filter(table => table.section === section);
-
-            // Sort by window first, then by priority within the section
-            const sortedTables = tablesInSection.sort((a, b) => {
-                if (a.isWindow !== b.isWindow) {
-                    return a.isWindow ? -1 : 1;
-                }
-                return a.priority - b.priority;
-            });
-
-            if (sortedTables.length > 0) {
-                return sortedTables[0];
-            }
-        }
-
-        return null;
-    };
-
-    const handleConfirmRecommendedSeating = () => {
-        if (recommendedTable) {
-            setTables(prevTables =>
-                prevTables.map(table => {
-                    if (table.tableNumber === recommendedTable.tableNumber) {
-                        const updatedTable = {
-                            ...table,
-                            isSeated: true,
-                            assignedServer: servers,
-                            priority: 0,
-                        };
-                        // Update last seated section
-                        setLastSeatedSection(updatedTable.section);
-
-                        return updatedTable;
-                    } else if (table.section === recommendedTable.section && !table.isSeated) {
-                        // Incresase priority for skipped section tables
-                        return {
-                            ...table,
-                            priority: table.priority + 1
-                        };
-                    }
-                    return table;
-                })
-            );
-            // Add last seated section to skipped sections
-            if (!skippedSections.includes(recommendedTable.section)) {
-                setSkippedSections([...skippedSections, recommendedTable.section]);
-            }
-
-            // Clear selected and recommended tables
-            setSelectedTable(null);
-            setRecommendedTable(null);
-        }
-    };
-
+    // Renders the recommended table button
     const renderRecommendedTableOrSeatButton = () => {
         if (recommendedTable) {
             return (
@@ -143,7 +86,7 @@ const FloorPlan = () => {
                     onClick={handleConfirmRecommendedSeating}
                     backgroundColor={"blue"}
                     textColor={"white"}
-                    name={`Seat Table ${recommendedTable.tableNumber}`}
+                    name={`Seat Recommended Table ${recommendedTable.tableNumber}`}
                 />
             );
         } else {
@@ -157,123 +100,7 @@ const FloorPlan = () => {
             );
         }
     };
-
-    const handleTableClick = (section, tableNumber) => {
-        setSelectedTable(prevSelectedTable => {
-            if(prevSelectedTable && prevSelectedTable.tableNumber === tableNumber) {
-                return null;
-            }
-            return tables.find(table => table.tableNumber === tableNumber);
-        });
-        
-        console.log(`Section ${section}, Table ${tableNumber} clicked`);
-    }
-    
-    const handlePartySizeInput = (digit) => {
-        setPartySizeInput(prevPartySizeInput => (prevPartySizeInput + digit).slice(0, 2));
-    };
-
-    const handleConfirmPartySize = () => {
-        const partySize = parseInt(partySizeInput, 10);
-        if (!isNaN(partySize) && selectedTable) {
-            setTables(prevTables => prevTables.map(table => {
-                if (table.tableNumber === selectedTable.tableNumber) {
-                    const updatedTable = {
-                        ...table,
-                        isSeated: true,
-                        assignedServer: servers,
-                        partySize,
-                    };
-                    setSelectedTable(updatedTable);
-                    return updatedTable;
-                }
-                return table;
-            }));
-        }
-        setPartySizeInput("");
-        setShowPartySizeInput(false);
-    };
-
-    const handleSeatTableButtonClick = (tableNumber) => {
-        const currentTable = tables.find(table => table.tableNumber === tableNumber);
-
-        if (currentTable.isSeated) {
-            setTables(prevTables => prevTables.map(table => {
-                if (table.tableNumber === tableNumber) {
-                    return {
-                        ...table,
-                        isSeated: false,
-                        assignedServer: null,
-                        partySize: 0,
-                    };
-                }
-                return table;
-                }));
-                setSelectedTable(null);
-        } else {
-            setSelectedTable(currentTable);
-            setShowPartySizeInput(true);
-        }
-    };
-
-    const getTableMaxCapacity = (tableNumber) => {
-        const rectangleNumbers = [1, 5, 6, 8, 9, 10, 13, 14, 15, 16, 18, 19, 20, 22, 23, 24, 25, 26, 31, 32, 33];
-        const circleNumbers = [4, 7, 17, 21, 27];
-        const squareNumbers = [2, 3, 11, 12, 28, 29, 30, 34, 35, 36];
-
-        if (rectangleNumbers.includes(tableNumber)) return 6;
-        if (circleNumbers.includes(tableNumber)) return 8;
-        if (squareNumbers.includes(tableNumber)) return 4;
-    }
-
-    const updateTableSections = (serversOn, tableNumber) => {
-        let sectionNum = 1;
-        
-        switch (serversOn) {
-            case 1:
-                    return 1;
-            case 2:
-                    return tableNumber <= 11 || tableNumber >= 29 ? sectionNum = 1 : sectionNum = 2;
-            case 3:
-                if (tableNumber <= 6 || tableNumber >= 32) return 1;
-                if ((tableNumber >= 7 && tableNumber <= 14) || (tableNumber >= 27 && tableNumber <= 32)) return 2;
-                return 3;  
-            case 4:
-                if (tableNumber <= 4 || tableNumber >= 34) return 1;
-                if ((tableNumber >= 5 && tableNumber <= 11) || (tableNumber >= 29 && tableNumber <= 33)) return 2;
-                if ((tableNumber >= 12 && tableNumber <= 16) || (tableNumber >= 24 && tableNumber <= 28)) return 3;
-                return 4;
-            case 5:
-                if (tableNumber <= 4 || tableNumber >= 34) return 1;
-                if ((tableNumber >= 5 && tableNumber <= 9) || (tableNumber >= 32 && tableNumber <= 33)) return 2;
-                if ((tableNumber >= 10 && tableNumber <= 13) || (tableNumber >= 27 && tableNumber <= 31)) return 3;
-                if ((tableNumber >= 14 && tableNumber <= 16) || (tableNumber >= 23 && tableNumber <= 26)) return 4;
-                return 5;
-            case 6:
-                if (tableNumber <= 3 || tableNumber >= 34) return 1;
-                if ((tableNumber >= 4 && tableNumber <= 6) || (tableNumber >= 32 && tableNumber <= 33)) return 2;
-                if ((tableNumber >= 7 && tableNumber <= 10) || (tableNumber >= 29 && tableNumber <= 31)) return 3;
-                if ((tableNumber >= 11 && tableNumber <= 13) || (tableNumber >= 27 && tableNumber <= 28)) return 4;
-                if ((tableNumber >= 14 && tableNumber <= 16) || (tableNumber >= 24 && tableNumber <= 26)) return 5;
-                return 6;                
-            case 7:
-                if (tableNumber <= 3 || tableNumber >= 34)
-                    return 1;
-                if ((tableNumber >= 4 && tableNumber <= 6) || (tableNumber >= 32 && tableNumber <= 33)) 
-                    return 2;
-                if ((tableNumber >= 7 && tableNumber <= 9) || (tableNumber >= 30 && tableNumber <= 31)) 
-                    return 3;
-                if ((tableNumber >= 10 && tableNumber <= 12) || (tableNumber >= 28 && tableNumber <= 29)) 
-                    return 4;
-                if ((tableNumber >= 13 && tableNumber <= 15) || (tableNumber === 27)) 
-                    return 5;
-                if ((tableNumber >= 16 && tableNumber <= 17) || (tableNumber >= 24 && tableNumber <= 26)) return 6;
-                    return 7;
-            default:
-                return sectionNum;
-        }
-    };
-
+    // Renders sections and tables
     const drawSections = (section) => {
         const tablesInSection = tables.filter(table => table.section === section);
         const sortedTables = sortTablesInSection(tablesInSection);
@@ -298,13 +125,234 @@ const FloorPlan = () => {
                                 assignedServer={table.assignedServer}
                                 partySize={table.partySize}
                                 isSelected={selectedTable && selectedTable.tableNumber === table.tableNumber}
-                            />
-                    ))}
+                                />
+                            ))}
+                </div>
+            </div>
+        );
+    };
+    // Renders the floor plan
+    const drawFloorPlan = () => {
+        const sections = [];        
+        for(let i = 1; i <= servers; i++) {   
+            sections.push(drawSections(i));
+        }
+    
+        return (
+            <div className="floor-container">
+                <div className="sections-container" style={gridStyle}>
+                    {sections}
                 </div>
             </div>
         );
     }
+// #endregion
 
+// #region Event handlers
+    // Handle the click event for the ServerButton component
+    const handleServerButtonClick = (count) => {setSelectedSection(count);}
+    const handleConfirmRecommendedSeating = () => {
+       if (recommendedTable) {
+            const {section, tableNumber} = recommendedTable;
+            
+            // Update the table to mark it as seated
+            setTables(prevTables =>
+                prevTables.map(table => {
+                    if (table.tableNumber === tableNumber) {
+                        return {
+                            ...table,
+                            isSeated: true,
+                            assignedServer: servers,
+                            priority: 1,
+                        };
+                    }
+                    return table;
+                })
+            );
+
+            // Update section priorities based on seating
+            setSections(prevSections => 
+                prevSections.map(sec => {
+                    if (sec.section === section) {
+                        return { ...sec, priority: sec.priority - (servers -1) };
+                    } else {
+                        return {...sec, priority: sec.priority + 1};
+                    }
+                })
+            );
+
+            // Track last seated section and skipped sections
+            setLastSeatedSection(section);
+            setSkippedSections(prev => prev.filter(sec => sec !== section));
+
+            const nextTable = findNextTableToSeat();
+            setRecommendedTable(nextTable);
+
+            console.log(`Seating table ${recommendedTable.tableNumber} in section ${section}`);
+       }
+    };
+    const handleTableClick = (section, tableNumber) => {
+        setSelectedTable(prevSelectedTable => {
+            if(prevSelectedTable && prevSelectedTable.tableNumber === tableNumber) {
+                return null;
+            }
+            return tables.find(table => table.tableNumber === tableNumber);
+        });
+        
+        console.log(`Section ${section}, Table ${tableNumber} clicked`);
+    }
+    const handleConfirmPartySize = () => {
+        const partySize = parseInt(partySizeInput, 10);
+        if (!isNaN(partySize) && selectedTable) {
+            setTables(prevTables => prevTables.map(table => {
+                if (table.tableNumber === selectedTable.tableNumber) {
+                    const updatedTable = {
+                        ...table,
+                        isSeated: true,
+                        assignedServer: servers,
+                        partySize,
+                    };
+                    setSelectedTable(updatedTable);
+                    return updatedTable;
+                }
+                return table;
+            }));
+        }
+        setPartySizeInput("");
+        setShowPartySizeInput(false);
+    };
+    const handleSeatTableButtonClick = (tableNumber) => {
+        const currentTable = tables.find(table => table.tableNumber === tableNumber);
+
+        if (currentTable.isSeated) {
+            setTables(prevTables => prevTables.map(table => {
+                if (table.tableNumber === tableNumber) {
+                    return {
+                        ...table,
+                        isSeated: false,
+                        assignedServer: null,
+                        partySize: 0,
+                    };
+                }
+                return table;
+                }));
+                setSelectedTable(null);
+        } else {
+            setSelectedTable(currentTable);
+            setShowPartySizeInput(true);
+        }
+    };
+// #endregion
+
+// #region Helper functions
+    // Find recommended table to seat based on section priority
+    const findNextTableToSeat = () => {
+        const allAvailableTables = tables.filter(table => !table.isSeated);
+
+        // Get unique sections from available tables
+        const availableSections = [...new Set(allAvailableTables.map(table => table.section))];
+
+        const prioritizedSections = sections
+            .filter(section => availableSections.includes(section.section))
+            .sort((a, b) => b.priority - a.priority);
+
+        for (const {section} of prioritizedSections) {
+            // Find all available tables in current section
+            const tablesInSection = allAvailableTables.filter(table => table.section === section);
+
+            // Sort by window first, then by table priority
+            const sortedTables = tablesInSection.sort((a, b) => {
+                if (a.isWindow !== b.isWindow) {
+                    return a.isWindow ? -1 : 1;
+                }
+                return a.priority - b.priority;
+            });
+
+            if (sortedTables.length > 0) {
+                if (sortedTables[0].isWindow) {
+                    return sortedTables[0];
+                } else {
+                    setSkippedSections(prev => [...new Set([...prev, section])]);
+                }
+            }
+        }
+
+        // After checking all sections, if no window found, return highest priority non-window seat
+        const nextBestTable = allAvailableTables.sort((a, b) => {
+            const aSectionPriority = sections.find(sec => sec.section === a.section)?.priority || 0;
+            const bSectionPriority = sections.find(sec => sec.section === b.section)?.priority || 0;
+
+            if (aSectionPriority !== bSectionPriority) {
+                return bSectionPriority - aSectionPriority;
+            }
+            return a.priority - b.priority;
+        })[0];
+
+        return nextBestTable || null;
+    };
+    // Aids in updating the party size input when a digit is clicked
+    const handlePartySizeInput = (digit) => {
+        setPartySizeInput(prevPartySizeInput => (prevPartySizeInput + digit).slice(0, 2));
+    };
+    // Updates party size of table when tables are rendered
+    const getTableMaxCapacity = (tableNumber) => {
+        const rectangleNumbers = [1, 5, 6, 8, 9, 10, 13, 14, 15, 16, 18, 19, 20, 22, 23, 24, 25, 26, 31, 32, 33];
+        const circleNumbers = [4, 7, 17, 21, 27];
+        const squareNumbers = [2, 3, 11, 12, 28, 29, 30, 34, 35, 36];
+
+        if (rectangleNumbers.includes(tableNumber)) return 6;
+        if (circleNumbers.includes(tableNumber)) return 8;
+        if (squareNumbers.includes(tableNumber)) return 4;
+    };
+    // Updates section number of tables when servers are rendered
+    const updateTableSections = (serversOn, tableNumber) => {
+            let sectionNum = 1;
+            
+            switch (serversOn) {
+                case 1:
+                        return 1;
+                case 2:
+                        return tableNumber <= 11 || tableNumber >= 29 ? sectionNum = 1 : sectionNum = 2;
+                case 3:
+                    if (tableNumber <= 6 || tableNumber >= 32) return 1;
+                    if ((tableNumber >= 7 && tableNumber <= 14) || (tableNumber >= 27 && tableNumber <= 32)) return 2;
+                    return 3;  
+                case 4:
+                    if (tableNumber <= 4 || tableNumber >= 34) return 1;
+                    if ((tableNumber >= 5 && tableNumber <= 11) || (tableNumber >= 29 && tableNumber <= 33)) return 2;
+                    if ((tableNumber >= 12 && tableNumber <= 16) || (tableNumber >= 24 && tableNumber <= 28)) return 3;
+                    return 4;
+                case 5:
+                    if (tableNumber <= 4 || tableNumber >= 34) return 1;
+                    if ((tableNumber >= 5 && tableNumber <= 9) || (tableNumber >= 32 && tableNumber <= 33)) return 2;
+                    if ((tableNumber >= 10 && tableNumber <= 13) || (tableNumber >= 27 && tableNumber <= 31)) return 3;
+                    if ((tableNumber >= 14 && tableNumber <= 16) || (tableNumber >= 23 && tableNumber <= 26)) return 4;
+                    return 5;
+                case 6:
+                    if (tableNumber <= 3 || tableNumber >= 34) return 1;
+                    if ((tableNumber >= 4 && tableNumber <= 6) || (tableNumber >= 32 && tableNumber <= 33)) return 2;
+                    if ((tableNumber >= 7 && tableNumber <= 10) || (tableNumber >= 29 && tableNumber <= 31)) return 3;
+                    if ((tableNumber >= 11 && tableNumber <= 13) || (tableNumber >= 27 && tableNumber <= 28)) return 4;
+                    if ((tableNumber >= 14 && tableNumber <= 16) || (tableNumber >= 24 && tableNumber <= 26)) return 5;
+                    return 6;                
+                case 7:
+                    if (tableNumber <= 3 || tableNumber >= 34)
+                        return 1;
+                    if ((tableNumber >= 4 && tableNumber <= 6) || (tableNumber >= 32 && tableNumber <= 33)) 
+                        return 2;
+                    if ((tableNumber >= 7 && tableNumber <= 9) || (tableNumber >= 30 && tableNumber <= 31)) 
+                        return 3;
+                    if ((tableNumber >= 10 && tableNumber <= 12) || (tableNumber >= 28 && tableNumber <= 29)) 
+                        return 4;
+                    if ((tableNumber >= 13 && tableNumber <= 15) || (tableNumber === 27)) 
+                        return 5;
+                    if ((tableNumber >= 16 && tableNumber <= 17) || (tableNumber >= 24 && tableNumber <= 26)) return 6;
+                        return 7;
+                default:
+                    return sectionNum;
+            }
+    };
+    // Helps drawSections function sort tables into respective sections
     const sortTablesInSection = (tablesInSection) => {
         const orderRow1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
         const orderRow2 = [36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 18];
@@ -325,30 +373,15 @@ const FloorPlan = () => {
                 orderRow4.indexOf(a.tableNumber) - orderRow4.indexOf(b.tableNumber));
 
         return [...sortedRow1, ...sortedRow2, ...sortedRow3, ...sortedRow4];
-    }
-    
+    };
+// #endregion
+
     const gridStyle = {
         display: "grid",
         gridTemplateColumns: `repeat(${servers}, 1fr`,
         width: `${100}%`,
     };
 
-    const drawFloorPlan = () => {
-        const sections = [];        
-        for(let i = 1; i <= servers; i++) {   
-            sections.push(drawSections(i));
-        }
-
-        return (
-            <div className="floor-container">
-                <div className="sections-container" style={gridStyle}>
-                    {sections}
-                </div>
-            </div>
-        );
-    }
-
-    
     return (
         <div>
             <div className={`${showPartySizeInput ? "blur-background" : ""}`}>
@@ -388,7 +421,7 @@ const FloorPlan = () => {
                                         onClick={() => handleSeatTableButtonClick(selectedTable.tableNumber)}
                                         backgroundColor={"blue"}
                                         textColor={"white"}
-                                        name={`Seat Table ${selectedTable.tableNumber}`}
+                                        name={`Seat Selected Table ${selectedTable.tableNumber}`}
                                     />
                                 )}
                             </div>
