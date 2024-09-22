@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Table from "./Table";
 import ServerButton from "./ServerButton";
 import "../css/FloorPlan.css";
+import mosChowder from "../images/mosChowderLogo.png";
+import mosChowder1 from "../images/mosChowderLogo1.png";
 
 const FloorPlan = () => {
     const [servers, setSelectedSection] = useState(1);
@@ -204,6 +206,9 @@ const FloorPlan = () => {
     const handleConfirmPartySize = () => {
         const partySize = parseInt(partySizeInput, 10);
         if (!isNaN(partySize) && selectedTable) {
+            const {section, tableNumber} = selectedTable;
+
+            // Update the table to mark it as seated
             setTables(prevTables => prevTables.map(table => {
                 if (table.tableNumber === selectedTable.tableNumber) {
                     const updatedTable = {
@@ -217,6 +222,24 @@ const FloorPlan = () => {
                 }
                 return table;
             }));
+
+            // Update section priorities based on seating
+            setSections(prevSections =>
+                prevSections.map(sec => {
+                    if (sec.section === section) {
+                        return { ...sec, priority: sec.priority - (servers - 1) };
+                    } else {
+                        return { ...sec, priority: sec.priority + 1 };
+                    }
+                })
+            );
+
+            // Track last seated section and skipped sections
+            setLastSeatedSection(section);
+            setSkippedSections(prev => prev.filter(sec => sec !== section));
+
+            const nextTable = findNextTableToSeat();
+            setRecommendedTable(nextTable);
         }
         setPartySizeInput("");
         setShowPartySizeInput(false);
@@ -385,6 +408,11 @@ const FloorPlan = () => {
     return (
         <div>
             <div className={`${showPartySizeInput ? "blur-background" : ""}`}>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "5px"}}>
+                    <img src={mosChowder} alt="mosChowder" className="mosChowder" style={{width: "100px"}}/>
+                    <img src={mosChowder1} alt="mosChowder1" className="mosChowder1" style={{width: "100px"}}/>
+                    <img src={mosChowder} alt="mosChowder" className="mosChowder" style={{width: "100px"}}/>
+                </div>
                 <div className="server-buttons">
                     {serverButtons}
                 </div>
