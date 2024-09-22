@@ -25,6 +25,22 @@ const FloorPlan = () => {
     const [showPartySizeInput, setShowPartySizeInput] = useState(false);
     const partySizeInputRef = useRef(null);
 // #region UseEffect's
+    // Prompt user to switch to landscape oreintation if on mobile
+    useEffect(() => {
+        const checkOrientation = () => {
+            if (window.innerHeight > window.innerWidth) {
+                alert("Please switch to landscape orientation for the best experience.");
+            }
+        };
+
+        window.addEventListener("resize", checkOrientation);
+        window.addEventListener("load", checkOrientation);
+
+        return () => {
+            window.removeEventListener("resize", checkOrientation);
+            window.removeEventListener("load", checkOrientation);
+        }
+    }, []);
     // Update sections when the number of servers changes
     useEffect(() => {
         const newSections = Array.from({ length: servers }, (_, i) => ({
